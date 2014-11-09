@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+#
+# Usage: rbenv update-rubies
+#
+# Installs latest versions of rubies
+set -e
+[ -n "$RBENV_DEBUG" ] && set -x
+
+require_plugin(){
+  local name=$1
+  local url=$2
+  if ! command -v "$name" >/dev/null; then
+    echo "$name plugin is required, run following command to install:"
+    printf "git clone %q %q\n" "$url" "$RBENV_ROOT/plugins/$name"
+    exit 1
+  fi
+}
+
+require_plugin ruby-build https://github.com/sstephenson/ruby-build.git
+require_plugin rbenv-whatis https://github.com/rkh/rbenv-whatis.git
+
+rubies=$(rbenv-versions --bare)
+installed=()
+to_uninstall=()
+
+ruby_installed(){
+  local ruby
+  for ruby in $rubies; do [[ "$ruby" == "$1" ]] && return 0; done
+  for ruby in ${installed[@]}; do [[ "$ruby" == "$1" ]] && return 0; done
+  return 1
+}
+
+BOLD_RED=$(tput setaf 1)$(tput bold)
+BOLD_GREEN=$(tput setaf 2)$(tput bold)
+BOLD_YELLOW=$(tput setaf 3)$(tput bold)
+NORMAL=$(tput sgr0)
+
+for ruby in $rubies; do
+  if [[ $ruby =~ ^(ree-)?1\.[89]\.[0-9]+ ]]; then
+    # 3 verion parts for 1.8, 1.9 and ree
+    base=${BASH_REMATCH}
+  elif [[ $ruby =~ ^[^0-9]*[0-9]+\.[0-9]+ ]]; then
+    # 2 version parts if there are
+    base=${BASH_REMATCH}
+  else
+    # remove last dash and everything after
+    base=${ruby%-*}
+  fi
+  updated=$(rbenv-whatis $base)
+
+  if [[ $ruby == $updated ]]; then
+    echo "${BOLD_GREEN}$ruby ($base): already latest${NORMAL}"
+  elif ruby_installed $updated; then
+    echo "${BOLD_RED}$ruby ($base): $updated already installed${NORMAL}"
+    to_uninstall+=($ruby)
+  else
+    echo "${BOLD_YELLOW}$ruby ($base): installing $updated${NORMAL}"
+    rbenv-install $updated
+    installed+=($updated)
+    to_uninstall+=($ruby)
+  fi
+done
+
+for ruby in ${to_uninstall[@]}; do
+  rbenv-uninstall $ruby
+done
