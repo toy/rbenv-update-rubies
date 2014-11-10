@@ -55,12 +55,13 @@ for ruby in $rubies; do
 
   if [ -L "$path" ]; then
     dest=$(readlink $path)
+    updated=$(rbenv-whatis $(ruby_version_base $dest))
     if [[ $dest == $updated ]]; then
       echo "${BOLD_GREEN}$ruby: symlink to $dest which is already latest${NORMAL}"
     else
-      suffix=${ruby#$dest}
-      echo "${BOLD_GREEN}$ruby: symlink to outdated $dest, creating symlink $updated$suffix for $updated${NORMAL}"
-      ln -nfs $updated $(dirname $path)/$updated$suffix
+      updated_link=${ruby/$dest/$updated}
+      echo "${BOLD_GREEN}$ruby: symlink to outdated $dest, creating symlink $updated_link for $updated${NORMAL}"
+      ln -nfs $updated $(dirname $path)/$updated_link
     fi
   elif [[ $ruby == $updated ]]; then
     echo "${BOLD_GREEN}$ruby ($base): already latest${NORMAL}"
