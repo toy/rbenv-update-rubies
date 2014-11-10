@@ -46,9 +46,19 @@ for ruby in $rubies; do
     # remove last dash and everything after
     base=${ruby%-*}
   fi
+  path=$(rbenv-prefix $ruby)
   updated=$(rbenv-whatis $base)
 
-  if [[ $ruby == $updated ]]; then
+  if [ -L "$path" ]; then
+    dest=$(readlink $path)
+    if [[ $dest == $updated ]]; then
+      echo "${BOLD_GREEN}$ruby: symlink to $dest which is already latest${NORMAL}"
+    else
+      suffix=${ruby#$dest}
+      echo "${BOLD_GREEN}$ruby: symlink to outdated $dest, creating symlink $updated$suffix for $updated${NORMAL}"
+      ln -nfs $updated $(dirname $path)/$updated$suffix
+    fi
+  elif [[ $ruby == $updated ]]; then
     echo "${BOLD_GREEN}$ruby ($base): already latest${NORMAL}"
   elif ruby_installed $updated; then
     echo "${BOLD_RED}$ruby ($base): $updated already installed${NORMAL}"
@@ -63,4 +73,11 @@ done
 
 for ruby in ${to_uninstall[@]}; do
   rbenv-uninstall $ruby
+done
+
+for path in "$RBENV_ROOT/versions/"*; do
+  if [ -L "$path" ] && [ ! -e "$path" ]; then
+    echo "removing symlink $path as $(readlink $path) doen't exist"
+    unlink "$path"
+  fi
 done
