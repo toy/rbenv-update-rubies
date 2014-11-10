@@ -77,7 +77,7 @@ for ruby in $rubies; do
 done
 
 for ruby in ${to_uninstall[@]}; do
-  rbenv-uninstall $ruby
+  rbenv-uninstall $ruby || true
 done
 
 for path in "$RBENV_ROOT/versions/"*; do
