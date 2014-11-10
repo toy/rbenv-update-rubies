@@ -23,6 +23,19 @@ rubies=$(rbenv-versions --bare)
 installed=()
 to_uninstall=()
 
+ruby_version_base(){
+  if [[ $1 =~ ^(ree-)?1\.[89]\.[0-9]+ ]]; then
+    # 3 verion parts for 1.8, 1.9 and ree
+    echo ${BASH_REMATCH}
+  elif [[ $1 =~ ^[^0-9]*[0-9]+\.[0-9]+ ]]; then
+    # 2 version parts if there are
+    echo ${BASH_REMATCH}
+  else
+    # remove last dash and everything after
+    echo ${1%-*}
+  fi
+}
+
 ruby_installed(){
   local ruby
   for ruby in $rubies; do [[ "$ruby" == "$1" ]] && return 0; done
@@ -36,17 +49,8 @@ BOLD_YELLOW=$(tput setaf 3)$(tput bold)
 NORMAL=$(tput sgr0)
 
 for ruby in $rubies; do
-  if [[ $ruby =~ ^(ree-)?1\.[89]\.[0-9]+ ]]; then
-    # 3 verion parts for 1.8, 1.9 and ree
-    base=${BASH_REMATCH}
-  elif [[ $ruby =~ ^[^0-9]*[0-9]+\.[0-9]+ ]]; then
-    # 2 version parts if there are
-    base=${BASH_REMATCH}
-  else
-    # remove last dash and everything after
-    base=${ruby%-*}
-  fi
   path=$(rbenv-prefix $ruby)
+  base=$(ruby_version_base $ruby)
   updated=$(rbenv-whatis $base)
 
   if [ -L "$path" ]; then
@@ -81,3 +85,10 @@ for path in "$RBENV_ROOT/versions/"*; do
     unlink "$path"
   fi
 done
+
+global=$(rbenv-global)
+updated=$(rbenv-whatis $(ruby_version_base $global))
+if [[ $global != $updated ]]; then
+  echo "Updating global $global => $updated"
+  rbenv-global $updated
+fi
