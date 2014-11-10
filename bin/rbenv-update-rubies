@@ -70,7 +70,7 @@ for ruby in $rubies; do
     to_uninstall+=($ruby)
   else
     echo "${BOLD_YELLOW}$ruby ($base): installing $updated${NORMAL}"
-    rbenv-install $updated
+    PREV_VERSION_NAME=$ruby rbenv-install $updated
     installed+=($updated)
     to_uninstall+=($ruby)
   fi
