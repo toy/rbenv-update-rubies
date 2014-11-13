@@ -19,6 +19,12 @@ require_plugin(){
 require_plugin ruby-build https://github.com/sstephenson/ruby-build.git
 require_plugin rbenv-whatis https://github.com/rkh/rbenv-whatis.git
 
+# Provide rbenv completions
+if [ "$1" = "--complete" ]; then
+  echo system
+  exec rbenv-versions --bare
+fi
+
 if [ $# -eq 0 ]; then
   rubies=$(rbenv-versions --bare)
 else
