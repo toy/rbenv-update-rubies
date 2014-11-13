@@ -20,6 +20,14 @@ git clone https://github.com/toy/rbenv-update-rubies.git "$(rbenv root)"/plugins
 
 ## Usage
 
+Update all:
+
 ```sh
 rbenv update-rubies
+```
+
+Update specific versions:
+
+```sh
+rbenv update-rubies 1.9.3-p551 2.1.4
 ```

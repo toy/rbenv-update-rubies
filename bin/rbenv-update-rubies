@@ -19,7 +19,11 @@ require_plugin(){
 require_plugin ruby-build https://github.com/sstephenson/ruby-build.git
 require_plugin rbenv-whatis https://github.com/rkh/rbenv-whatis.git
 
-rubies=$(rbenv-versions --bare)
+if [ $# -eq 0 ]; then
+  rubies=$(rbenv-versions --bare)
+else
+  rubies="$*"
+fi
 installed=()
 to_uninstall=()
 
