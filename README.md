@@ -13,9 +13,9 @@ This plugin uses `rbenv-whatis` and `ruby-build`, so first two clones are for th
 
 ```sh
 mkdir -p "$(rbenv root)"/plugins
-git clone https://github.com/rkh/rbenv-whatis.git "$(rbenv root)"/plugins/rbenv-whatis
+git clone https://github.com/toy/rbenv-whatis.git "$(rbenv root)"/plugins/whatis
 git clone https://github.com/sstephenson/ruby-build.git "$(rbenv root)"/plugins/ruby-build
-git clone https://github.com/toy/rbenv-update-rubies.git "$(rbenv root)"/plugins/rbenv-update-rubies
+git clone https://github.com/toy/rbenv-update-rubies.git "$(rbenv root)"/plugins/update-rubies
 ```
 
 ## Usage
