@@ -58,6 +58,10 @@ ruby_installed(){
   return 1
 }
 
+tput() {
+  command tput "$@" 2>/dev/null || true
+}
+
 BOLD_RED=$(tput setaf 1)$(tput bold)
 BOLD_GREEN=$(tput setaf 2)$(tput bold)
 BOLD_YELLOW=$(tput setaf 3)$(tput bold)
