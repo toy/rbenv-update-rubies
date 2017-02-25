@@ -25,6 +25,11 @@ if [ "$1" = "--complete" ]; then
   exec rbenv-versions --bare
 fi
 
+if [ "$1" = "-n" ]; then
+  only_check=1
+  shift
+fi
+
 if [ $# -eq 0 ]; then
   rubies=$(rbenv-versions --bare)
 else
@@ -71,7 +76,7 @@ for ruby in $rubies; do
     else
       updated_link=${ruby/$dest/$updated}
       echo "${BOLD_YELLOW}$ruby: symlink to outdated $dest, creating symlink $updated_link for $updated${NORMAL}"
-      ln -nfs $updated $(dirname $path)/$updated_link
+      [ -z "$only_check" ] && ln -nfs $updated $(dirname $path)/$updated_link
     fi
   elif [[ $ruby == $updated ]]; then
     echo "${BOLD_GREEN}$ruby ($base): already latest${NORMAL}"
@@ -80,11 +85,19 @@ for ruby in $rubies; do
     to_uninstall+=($ruby)
   else
     echo "${BOLD_YELLOW}$ruby ($base): installing $updated${NORMAL}"
-    PREV_VERSION_NAME=$ruby rbenv-install $updated
+    [ -z "$only_check" ] && PREV_VERSION_NAME=$ruby rbenv-install $updated
     installed+=($updated)
     to_uninstall+=($ruby)
   fi
 done
+
+if [ -n "$only_check" ]; then
+  if [ -n "$installed" ]; then
+    exit 1
+  else
+    exit 0
+  fi
+fi
 
 for ruby in ${to_uninstall[@]}; do
   rbenv-uninstall $ruby || true

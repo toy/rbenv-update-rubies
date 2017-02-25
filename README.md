@@ -31,3 +31,11 @@ Update specific versions:
 ```sh
 rbenv update-rubies 1.9.3-p551 2.1.4
 ```
+
+Check if updates are required:
+
+```sh
+rbenv update-rubies -n
+
+rbenv update-rubies -n 1.9.3-p551 2.1.4
+```
