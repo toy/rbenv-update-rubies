@@ -39,7 +39,7 @@ installed=()
 to_uninstall=()
 
 ruby_version_base(){
-  if [[ $1 =~ ^(ree-)?1\.[89]\.[0-9]+ ]]; then
+  if [[ $1 =~ ^(ree-)?1\.[89]\.[0-9]+(-p)? ]]; then
     # 3 verion parts for 1.8, 1.9 and ree
     echo ${BASH_REMATCH}
   elif [[ $1 =~ ^[^0-9]*[0-9]+\.[0-9]+ ]]; then
