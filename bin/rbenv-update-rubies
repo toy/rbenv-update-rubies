@@ -38,17 +38,23 @@ fi
 installed=()
 to_uninstall=()
 
-ruby_version_base(){
-  if [[ $1 =~ ^(ree-)?1\.[89]\.[0-9]+(-p)? ]]; then
-    # 3 verion parts for 1.8, 1.9 and ree
-    echo ${BASH_REMATCH}
-  elif [[ $1 =~ ^[^0-9]*[0-9]+\.[0-9]+ ]]; then
-    # 2 version parts if there are
-    echo ${BASH_REMATCH}
-  else
-    # remove last dash and everything after
-    echo ${1%-*}
+ruby_version_pattern(){
+  local pattern="$1"
+
+  # remove pre version suffix
+  if [[ "$pattern" =~ ^(.*)[-.](dev|(pre|preview|rc)[0-9]+)$ ]]; then
+    pattern="${BASH_REMATCH[1]}"
   fi
+
+  if [[ "$pattern" =~ ^([^0-9]*[0-9]+(\.[0-9]+){2}-p)[0-9]+([.-][0-9]+)*([^0-9]*)$ ]]; then
+    # version with -pNNN
+    pattern="${BASH_REMATCH[1]}*${BASH_REMATCH[4]}"
+  elif [[ "$pattern" =~ ^([^0-9]*([0-9]+\.){1,2})[0-9]+([.-][0-9]+)*([^0-9]*)$ ]]; then
+    # version with at least 2 or 3 parts
+    pattern="${BASH_REMATCH[1]}*${BASH_REMATCH[4]}"
+  fi
+
+  echo "$pattern"
 }
 
 ruby_installed(){
@@ -69,12 +75,12 @@ NORMAL=$(tput sgr0)
 
 for ruby in $rubies; do
   path=$(rbenv-prefix $ruby)
-  base=$(ruby_version_base $ruby)
-  updated=$(rbenv-whatis $base)
+  pattern=$(ruby_version_pattern $ruby)
+  updated=$(rbenv-whatis $pattern)
 
   if [ -L "$path" ]; then
     dest=$(readlink $path)
-    updated=$(rbenv-whatis $(ruby_version_base $dest))
+    updated=$(rbenv-whatis $(ruby_version_pattern $dest))
     if [[ $dest == $updated ]]; then
       echo "${BOLD_GREEN}$ruby: symlink to $dest which is already latest${NORMAL}"
     else
@@ -87,16 +93,16 @@ for ruby in $rubies; do
       fi
     fi
   elif [[ $ruby == $updated ]]; then
-    echo "${BOLD_GREEN}$ruby ($base): already latest${NORMAL}"
+    echo "${BOLD_GREEN}$ruby ($pattern): already latest${NORMAL}"
   elif ruby_installed $updated; then
-    echo "${BOLD_RED}$ruby ($base): $updated already installed${NORMAL}"
+    echo "${BOLD_RED}$ruby ($pattern): $updated already installed${NORMAL}"
     to_uninstall+=($ruby)
   else
     if [ -z "$only_check" ]; then
-      echo "${BOLD_YELLOW}$ruby ($base): installing $updated${NORMAL}"
+      echo "${BOLD_YELLOW}$ruby ($pattern): installing $updated${NORMAL}"
       PREV_VERSION_NAME=$ruby rbenv-install $updated
     else
-      echo "${BOLD_YELLOW}$ruby ($base): will install $updated${NORMAL}"
+      echo "${BOLD_YELLOW}$ruby ($pattern): will install $updated${NORMAL}"
     fi
     installed+=($updated)
     to_uninstall+=($ruby)
@@ -123,7 +129,7 @@ for path in "$RBENV_ROOT/versions/"*; do
 done
 
 global=$(rbenv-global)
-updated=$(rbenv-whatis $(ruby_version_base $global))
+updated=$(rbenv-whatis $(ruby_version_pattern $global))
 if [[ $global != $updated ]]; then
   echo "Updating global $global => $updated"
   rbenv-global $updated
