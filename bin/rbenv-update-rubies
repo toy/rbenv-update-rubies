@@ -11,13 +11,13 @@ require_plugin(){
   local url=$2
   if ! command -v "$name" >/dev/null; then
     echo "$name plugin is required, run following command to install:"
-    printf "git clone %q %q\n" "$url" "$RBENV_ROOT/plugins/$name"
+    printf "git clone %q %q\n" "$url" "$RBENV_ROOT/plugins/${name#rbenv-}"
     exit 1
   fi
 }
 
 require_plugin ruby-build https://github.com/sstephenson/ruby-build.git
-require_plugin rbenv-whatis https://github.com/rkh/rbenv-whatis.git
+require_plugin rbenv-whatis https://github.com/toy/rbenv-whatis.git
 
 # Provide rbenv completions
 if [ "$1" = "--complete" ]; then
