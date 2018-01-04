@@ -60,7 +60,7 @@ ruby_version_pattern(){
 ruby_installed(){
   local ruby
   for ruby in $rubies; do [[ "$ruby" == "$1" ]] && return 0; done
-  for ruby in ${installed[@]}; do [[ "$ruby" == "$1" ]] && return 0; done
+  for ruby in "${installed[@]}"; do [[ "$ruby" == "$1" ]] && return 0; done
   return 1
 }
 
@@ -74,33 +74,33 @@ BOLD_YELLOW=$(tput setaf 3)$(tput bold)
 NORMAL=$(tput sgr0)
 
 for ruby in $rubies; do
-  path=$(rbenv-prefix $ruby)
-  pattern=$(ruby_version_pattern $ruby)
-  updated=$(rbenv-whatis $pattern)
+  path=$(rbenv-prefix "$ruby")
+  pattern=$(ruby_version_pattern "$ruby")
+  updated=$(rbenv-whatis "$pattern")
 
   if [ -L "$path" ]; then
-    dest=$(readlink $path)
-    updated=$(rbenv-whatis $(ruby_version_pattern $dest))
-    if [[ $dest == $updated ]]; then
+    dest=$(readlink "$path")
+    updated=$(rbenv-whatis "$(ruby_version_pattern "$dest")")
+    if [[ "$dest" == "$updated" ]]; then
       echo "${BOLD_GREEN}$ruby: symlink to $dest which is already latest${NORMAL}"
     else
       updated_link=${ruby/$dest/$updated}
       if [ -z "$only_check" ]; then
         echo "${BOLD_YELLOW}$ruby: symlink to outdated $dest, creating symlink $updated_link for $updated${NORMAL}"
-        ln -nfs $updated $(dirname $path)/$updated_link
+        ln -nfs "$updated" "$(dirname "$path")/$updated_link"
       else
         echo "${BOLD_YELLOW}$ruby: symlink to outdated $dest, will create symlink $updated_link for $updated${NORMAL}"
       fi
     fi
-  elif [[ $ruby == $updated ]]; then
+  elif [[ "$ruby" == "$updated" ]]; then
     echo "${BOLD_GREEN}$ruby ($pattern): already latest${NORMAL}"
-  elif ruby_installed $updated; then
+  elif ruby_installed "$updated"; then
     echo "${BOLD_RED}$ruby ($pattern): $updated already installed${NORMAL}"
     to_uninstall+=($ruby)
   else
     if [ -z "$only_check" ]; then
       echo "${BOLD_YELLOW}$ruby ($pattern): installing $updated${NORMAL}"
-      PREV_VERSION_NAME=$ruby rbenv-install $updated
+      PREV_VERSION_NAME=$ruby rbenv-install "$updated"
     else
       echo "${BOLD_YELLOW}$ruby ($pattern): will install $updated${NORMAL}"
     fi
@@ -110,27 +110,27 @@ for ruby in $rubies; do
 done
 
 if [ -n "$only_check" ]; then
-  if [ -n "$installed" ]; then
+  if [ ${#installed[@]} -gt 0 ]; then
     exit 1
   else
     exit 0
   fi
 fi
 
-for ruby in ${to_uninstall[@]}; do
-  rbenv-uninstall $ruby || true
+for ruby in "${to_uninstall[@]}"; do
+  rbenv-uninstall "$ruby" || true
 done
 
 for path in "$RBENV_ROOT/versions/"*; do
   if [ -L "$path" ] && [ ! -e "$path" ]; then
-    echo "removing symlink $path as $(readlink $path) doen't exist"
+    echo "removing symlink $path as $(readlink "$path") doen't exist"
     unlink "$path"
   fi
 done
 
 global=$(rbenv-global)
-updated=$(rbenv-whatis $(ruby_version_pattern $global))
-if [[ $global != $updated ]]; then
+updated=$(rbenv-whatis "$(ruby_version_pattern "$global")")
+if [[ "$global" != "$updated" ]]; then
   echo "Updating global $global => $updated"
-  rbenv-global $updated
+  rbenv-global "$updated"
 fi
