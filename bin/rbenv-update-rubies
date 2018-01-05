@@ -68,6 +68,47 @@ tput() {
   command tput "$@" 2>/dev/null || true
 }
 
+longest_common_substring(){
+  for i in $(seq ${#1} -1 1); do
+    for j in $(seq 0 $((${#1}-i))); do
+      match="${1:$j:$i}"
+      if [[ "$2" == *"$match"* ]]; then
+        echo "$match"
+        return
+      fi
+    done
+  done
+}
+
+transform_link(){
+  local old_link="$1"
+  local old_ruby="$2"
+  local new_ruby="$3"
+
+  local new_link="${old_link/"$old_ruby"/"$new_ruby"}"
+  if [[ "$new_link" != "$old_link" ]]; then
+    echo "$new_link"
+  else
+    local old_common="$(longest_common_substring "$old_link" "$old_ruby")"
+
+    [[ "$old_link" =~ (.*)"$old_common"(.*) ]]
+    local link_prefix="${BASH_REMATCH[1]}"
+    local link_suffix="${BASH_REMATCH[2]}"
+
+    [[ "$old_ruby" =~ (.*)"$old_common"(.*) ]]
+    local ruby_prefix="${BASH_REMATCH[1]}"
+    local ruby_suffix="${BASH_REMATCH[2]}"
+
+    with_link_prefix="${new_ruby/#$ruby_prefix/$link_prefix}"
+    new_link="${with_link_prefix/%$ruby_suffix/$link_suffix}"
+    if [[ "$new_link" == "$new_ruby" ]]; then
+      echo "$old_link"
+    else
+      echo "$new_link"
+    fi
+  fi
+}
+
 BOLD_RED=$(tput setaf 1)$(tput bold)
 BOLD_GREEN=$(tput setaf 2)$(tput bold)
 BOLD_YELLOW=$(tput setaf 3)$(tput bold)
@@ -84,12 +125,12 @@ for ruby in $rubies; do
     if [[ "$dest" == "$updated" ]]; then
       echo "${BOLD_GREEN}$ruby: symlink to $dest which is already latest${NORMAL}"
     else
-      updated_link=${ruby/$dest/$updated}
+      updated_link="$(transform_link "$ruby" "$dest" "$updated")"
       if [ -z "$only_check" ]; then
-        echo "${BOLD_YELLOW}$ruby: symlink to outdated $dest, creating symlink $updated_link for $updated${NORMAL}"
+        echo "${BOLD_YELLOW}$ruby: symlink to outdated $dest, symlinking $updated_link to $updated${NORMAL}"
         ln -nfs "$updated" "$(dirname "$path")/$updated_link"
       else
-        echo "${BOLD_YELLOW}$ruby: symlink to outdated $dest, will create symlink $updated_link for $updated${NORMAL}"
+        echo "${BOLD_YELLOW}$ruby: symlink to outdated $dest, will symlink $updated_link to $updated${NORMAL}"
       fi
     fi
   elif [[ "$ruby" == "$updated" ]]; then
