@@ -126,9 +126,13 @@ for ruby in $rubies; do
       echo "${BOLD_GREEN}$ruby: symlink to $dest which is already latest${NORMAL}"
     else
       updated_link="$(transform_link "$ruby" "$dest" "$updated")"
-      if [ -z "$only_check" ]; then
+      link_path="$(dirname "$path")/$updated_link"
+
+      if [[ "$(readlink "$link_path")" == "$updated" ]]; then
+        echo "${BOLD_RED}$ruby: symlink to outdated $dest${NORMAL}"
+      elif [ -z "$only_check" ]; then
         echo "${BOLD_YELLOW}$ruby: symlink to outdated $dest, symlinking $updated_link to $updated${NORMAL}"
-        ln -nfs "$updated" "$(dirname "$path")/$updated_link"
+        ln -nfs "$updated" "$link_path"
       else
         echo "${BOLD_YELLOW}$ruby: symlink to outdated $dest, will symlink $updated_link to $updated${NORMAL}"
       fi
