@@ -176,6 +176,11 @@ if [ -n "$only_check" ]; then
   fi
 fi
 
+after_update_bin="$(rbenv root)/after-update-rubies"
+if [ -x "$after_update_bin" ]; then
+  "$after_update_bin"
+fi
+
 for ruby in "${to_uninstall[@]}"; do
   rbenv-uninstall "$ruby" || true
 done
